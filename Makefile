@@ -1,7 +1,8 @@
 .default=all
 
 meson:
-	@meson setup build
+	@[[ -d build ]] || meson setup build
+	@meson setup build --reconfigure
 	@meson compile -C build
 
 build:
