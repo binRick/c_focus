@@ -7,15 +7,12 @@
 }
 @property (retain) NSRunningApplication *currentApp;
 @end
-
 @implementation MDAppController
 @synthesize currentApp;
 
-static c_focus_event_callback_t focus_callback = NULL;
-static c_focus_event_block_t    focus_block    = NULL;
-static struct c_focus_state_t state = { 0 };
-static int __c_focus(void);
+static struct c_focus_state_t state;
 static unsigned long __c_focus__timestamp(void);
+static int __c_focus_event_handler(void);
 
 - (id)init {
   if ((self = [super init]))
@@ -30,6 +27,9 @@ static unsigned long __c_focus__timestamp(void);
 }
 
 - (void)activeAppDidChange:(NSNotification *)notification {
+  if (!state.active)
+    return;
+
   self.currentApp = [[notification userInfo] objectForKey:NSWorkspaceApplicationKey];
   struct c_focus_event_t e = {
     .time         = {
@@ -43,15 +43,16 @@ static unsigned long __c_focus__timestamp(void);
       .title      = (char *)[currentApp.bundleIdentifier UTF8String],
     },
   };
-  if (focus_callback)
-    focus_callback(e);
-  else if (focus_block)
-    focus_block(e);
+
+  if (state.callback)
+    state.callback(e);
+  else if (state.block)
+    state.block(e);
 }
 @end
 
-static int __c_focus(void){
-  state.active=true;
+static int __c_focus_event_handler(void){
+  state.active = true;
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
   [NSApplication sharedApplication];
@@ -63,16 +64,6 @@ static int __c_focus(void){
   return(0);
 }
 
-int __c_focus_block(c_focus_event_block_t cb){
-  focus_block = cb;
-  return(__c_focus());
-}
-
-int __c_focus_callback(c_focus_event_callback_t cb){
-  focus_callback = cb;
-  return(__c_focus());
-}
-
 static unsigned long __c_focus__timestamp(void){
   struct timeval tv;
   int            ret = gettimeofday(&tv, NULL);
@@ -80,4 +71,14 @@ static unsigned long __c_focus__timestamp(void){
   if (-1 == ret) return(-1);
 
   return((unsigned long)((int64_t)tv.tv_sec * 1000 + (int64_t)tv.tv_usec / 1000));
+}
+
+int __c_focus_block(c_focus_event_block_t cb){
+  state.block = cb;
+  return(__c_focus_event_handler());
+}
+
+int __c_focus_callback(c_focus_event_callback_t cb){
+  state.callback = cb;
+  return(__c_focus_event_handler());
 }

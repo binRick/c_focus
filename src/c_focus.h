@@ -1,17 +1,19 @@
 #pragma once
 #ifndef C_FOCUS_H
 #define C_FOCUS_H
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include <stdbool.h>
 struct c_focus_event_t;
 typedef void (*c_focus_event_callback_t)(struct c_focus_event_t);
 typedef void (^c_focus_event_block_t)(struct c_focus_event_t);
 struct c_focus_state_t {
-  bool active;
+  bool                     active;
+  c_focus_event_callback_t callback;
+  c_focus_event_block_t    block;
 };
 struct c_focus_event_t {
   struct {
