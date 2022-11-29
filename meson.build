@@ -8,8 +8,11 @@ inc = [
   include_directories(
     'src',
     '.',
+    'submodules',
   ),
 ]
+c_focus_util_link_args=[
+  ]
 c_focus_link_args=[
   '-Wl,-framework,CoreFoundation',
   '-Wl,-framework,Foundation',
@@ -18,13 +21,32 @@ c_focus_link_args=[
   '-F/System/Library/PrivateFrameworks',
 ]
 
+c_focus_util_sources = [
+  'submodules/c_fsio/src/fsio.c',
+  'submodules/c_stringfn/src/stringfn.c',
+]
+
+c_focus_sources = [
+  'src/c_focus.h',
+  'src/c_focus.m',
+]
+
 #############################################################################
+c_focus_util_lib = static_library('c_focus_util',
+  files(c_focus_util_sources),
+  install: false,
+  dependencies: [],
+  c_args: [],
+  link_args: c_focus_util_link_args,
+  include_directories: [inc]
+)
 c_focus_lib = static_library('c_focus',
-  ['src/c_focus.m','src/c_focus.h'],
+  files(c_focus_sources),
   install: false,
   dependencies: [],
   c_args: [],
   link_args: c_focus_link_args,
+  link_whole: [c_focus_util_lib],
   include_directories: [inc]
 )
 

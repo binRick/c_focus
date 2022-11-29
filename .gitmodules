@@ -1,0 +1,6 @@
+[submodule "submodules/c_stringfn"]
+	path = submodules/c_stringfn
+	url = https://github.com/sagiegurari/c_stringfn
+[submodule "submodules/c_fsio"]
+	path = submodules/c_fsio
+	url = https://github.com/sagiegurari/c_fsio

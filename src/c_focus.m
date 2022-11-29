@@ -1,6 +1,8 @@
 #include "c_focus.h"
 #import <AppKit/AppKit.h>
 #import <Foundation/Foundation.h>
+#include "submodules/c_fsio/include/fsio.h"
+#include "submodules/c_stringfn/include/stringfn.h"
 extern AXError _AXUIElementGetWindow(AXUIElementRef, uint32_t *);
 extern CFStringRef SLSCopyManagedDisplayForWindow(int cid, uint32_t wid);
 extern int CGSMainConnectionID(void);
@@ -14,9 +16,21 @@ extern uint64_t SLSManagedDisplayGetCurrentSpace(int, CFStringRef);
 @implementation MDAppController
 @synthesize currentApp;
 
+static const char *path_prefix="file://";
 static struct c_focus_state_t state;
 static unsigned long __c_focus__timestamp(void);
 static int __c_focus_event_handler(void);
+static void __c_focus_normalize_event(struct c_focus_event_t *);
+static void __c_focus_normalize_event(struct c_focus_event_t *ev){
+  if(ev->process.executable)
+    if(stringfn_starts_with(ev->process.executable,path_prefix))
+      ev->process.executable=stringfn_substring(ev->process.executable,strlen(path_prefix),strlen(ev->app.path)-strlen(ev->app.path));
+  if(ev->app.path)
+    if(stringfn_starts_with(ev->app.path,path_prefix))
+      ev->app.path=stringfn_substring(ev->app.path,strlen(path_prefix),strlen(ev->app.path)-strlen(ev->app.path));
+  if(stringfn_ends_with(ev->app.path,"/"))
+    ev->app.path=stringfn_substring(ev->app.path,0,strlen(ev->app.path)-1);
+}
 
 - (id)init {
   if ((self = [super init]))
@@ -109,6 +123,7 @@ static int __c_focus_event_handler(void);
       .title      = (char *)[currentApp.bundleIdentifier UTF8String],
     },
   };
+  __c_focus_normalize_event(&e);
 
   if (state.callback)
     state.callback(e);
@@ -116,6 +131,91 @@ static int __c_focus_event_handler(void);
     state.block(e);
 }
 @end
+
+char *__c_focus_serialize_event(struct c_focus_event_t *ev){
+  char *s,*w,*a,*d,*t,*m,*e;
+  asprintf(&e,
+      "{"
+      "\"executable:\":\"%s\""
+      ",\"pid:\":%d"
+      "}"
+      "%s",
+      ev->process.executable,
+      ev->process.pid,
+      ""
+      );
+  asprintf(&m,
+      "{"
+      "\"x:\":%d"
+      ",\"y:\":%d"
+      "}"
+      "%s",
+      ev->mouse.x,
+      ev->mouse.y,
+      ""
+      );
+  asprintf(&t,
+      "{"
+      "\"timestamp:\":\"%ld\""
+      "}"
+      "%s",
+      ev->time.timestamp,
+      ""
+      );
+  asprintf(&a,
+      "{"
+      "\"name:\":\"%s\""
+      ",\"path:\":\"%s\""
+      ",\"title:\":\"%s\""
+      "}"
+      "%s",
+      ev->app.name,
+      ev->app.path,
+      ev->app.title,
+      ""
+      );
+  asprintf(&s,
+      "{"
+      "\"id:\":%d"
+      "}"
+      "%s",
+      ev->space.id,
+      ""
+      );
+  asprintf(&d,
+      "{"
+      "\"id:\":%d"
+      "}"
+      "%s",
+      ev->display.id,
+      ""
+      );
+  asprintf(&w,
+      "{"
+      "\"id:\":%d"
+      "}"
+      "%s",
+      ev->window.id,
+      ""
+      );
+  asprintf(&s,
+      "{"
+      "\"window:\":%s"
+      ",\"display:\":%s"
+      ",\"space:\":%s"
+      ",\"mouse:\":%s"
+      ",\"app:\":%s"
+      "}"
+      "%s",
+      w,
+      d,
+      s,
+      m,
+      a,
+      ""
+      );
+  return(s);
+}
 
 static int __c_focus_event_handler(void){
   state.active = true;

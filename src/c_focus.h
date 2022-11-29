@@ -42,5 +42,6 @@ struct c_focus_event_t {
 };
 int __c_focus_callback(c_focus_event_callback_t callback);
 int __c_focus_block(c_focus_event_block_t block);
+char *__c_focus_serialize_event(struct c_focus_event_t *e);
 
 #endif
