@@ -25,6 +25,7 @@ static void AXWindowGetValue(AXUIElementRef window,
                       CFStringRef    attrName,
                       void           *valuePtr);
 static void __c_focus_normalize_event(struct c_focus_event_t *ev){
+
   if(ev->process.executable)
     if(stringfn_starts_with(ev->process.executable,path_prefix))
       ev->process.executable=stringfn_substring(ev->process.executable,strlen(path_prefix),strlen(ev->app.path)-strlen(ev->app.path));
@@ -33,8 +34,32 @@ static void __c_focus_normalize_event(struct c_focus_event_t *ev){
       ev->app.path=stringfn_substring(ev->app.path,strlen(path_prefix),strlen(ev->app.path)-strlen(ev->app.path));
   if(stringfn_ends_with(ev->app.path,"/"))
     ev->app.path=stringfn_substring(ev->app.path,0,strlen(ev->app.path)-1);
+  CFArrayRef window_list;
+  CFNumberRef window_memory_usage_ref;
+  uint32_t window_qty=0;
+  CFDictionaryRef     window_dict;
+  size_t window_memory_usage=0;
+  CFDictionaryRef     window_bounds;
+  CGRect bounds;
+  if(ev->window.id)
+    window_list = CGWindowListCopyWindowInfo(kCGWindowListOptionAll | kCGWindowListOptionIncludingWindow, ev->window.id); 
+  if(window_list)
+    window_qty = CFArrayGetCount(window_list);
+  if(window_qty==1)
+    window_dict = CFArrayGetValueAtIndex(window_list, 0);
+  if(window_dict){
+    window_memory_usage_ref = CFDictionaryGetValue(window_dict, kCGWindowMemoryUsage); 
+    if((window_bounds = CFDictionaryGetValue(window_dict, kCGWindowBounds)))
+      CGRectMakeWithDictionaryRepresentation(window_bounds, &bounds);
+  }
+  if(window_memory_usage_ref)
+    CFNumberGetValue(window_memory_usage_ref, CFNumberGetType(window_memory_usage_ref), &window_memory_usage);
+  if(bounds.size.width)
+    ev->window.width=(int)(bounds.size.width);
+  if(bounds.size.height)
+    ev->window.height=(int)(bounds.size.height);
+  
 }
-
 - (id)init {
   if ((self = [super init]))
     [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self
