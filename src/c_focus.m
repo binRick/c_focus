@@ -21,6 +21,9 @@ static struct c_focus_state_t state;
 static unsigned long __c_focus__timestamp(void);
 static int __c_focus_event_handler(void);
 static void __c_focus_normalize_event(struct c_focus_event_t *);
+static void AXWindowGetValue(AXUIElementRef window,
+                      CFStringRef    attrName,
+                      void           *valuePtr);
 static void __c_focus_normalize_event(struct c_focus_event_t *ev){
   if(ev->process.executable)
     if(stringfn_starts_with(ev->process.executable,path_prefix))
@@ -63,6 +66,7 @@ static void __c_focus_normalize_event(struct c_focus_event_t *ev){
   if (!state.active)
     return;
 
+  CGPoint window_position;
   self.currentApp = [[notification userInfo] objectForKey:NSWorkspaceApplicationKey];
   CFTypeRef window_ref = NULL;
   uint32_t window_id = 0, display_id =0, space_id=0;
@@ -77,6 +81,7 @@ static void __c_focus_normalize_event(struct c_focus_event_t *ev){
       fprintf(stderr,"Failed to Copy Focused app for pid %d\n",currentApp.processIdentifier);
     }else{
       _AXUIElementGetWindow(window_ref, &window_id);
+      AXWindowGetValue(window_ref, kAXPositionAttribute, &window_position);
       CFRelease(window_ref);
     }
     CFRelease(app);
@@ -92,9 +97,13 @@ static void __c_focus_normalize_event(struct c_focus_event_t *ev){
     CFRelease(uuid);  
   }
 
+
   CGEventRef Event = CGEventCreate(nil);
   CGPoint    mouse_loc     = CGEventGetLocation(Event);
   CFRelease(Event);
+
+
+
 
   struct c_focus_event_t e = {
     .time         = {
@@ -112,6 +121,8 @@ static void __c_focus_normalize_event(struct c_focus_event_t *ev){
     },
     .window = {
       .id=window_id,
+      .x=(int)(window_position.x),
+      .y=(int)(window_position.y),
     },
     .process={
       .pid        = (pid_t)currentApp.processIdentifier,
@@ -129,6 +140,15 @@ static void __c_focus_normalize_event(struct c_focus_event_t *ev){
     state.callback(e);
   else if (state.block)
     state.block(e);
+}
+static void AXWindowGetValue(AXUIElementRef window,
+                      CFStringRef    attrName,
+                      void           *valuePtr) {
+  AXValueRef attrValue;
+
+  AXUIElementCopyAttributeValue(window, attrName, (CFTypeRef *)&attrValue);
+  AXValueGetValue(attrValue, AXValueGetType(attrValue), valuePtr);
+  CFRelease(attrValue);
 }
 @end
 
@@ -193,9 +213,17 @@ char *__c_focus_serialize_event(struct c_focus_event_t *ev){
   asprintf(&w,
       "{"
       "\"id:\":%d"
+      "\"width:\":%d"
+      "\"height:\":%d"
+      "\"x:\":%d"
+      "\"y:\":%d"
       "}"
       "%s",
       ev->window.id,
+      ev->window.width,
+      ev->window.height,
+      ev->window.x,
+      ev->window.y,
       ""
       );
   asprintf(&s,

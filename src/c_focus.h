@@ -38,6 +38,8 @@ struct c_focus_event_t {
   } space;
   struct {
     uint32_t id;
+    uint32_t width, height;
+    uint32_t x, y;
   } window;
 };
 int __c_focus_callback(c_focus_event_callback_t callback);
