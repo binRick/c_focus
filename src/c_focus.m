@@ -213,10 +213,10 @@ char *__c_focus_serialize_event(struct c_focus_event_t *ev){
   asprintf(&w,
       "{"
       "\"id:\":%d"
-      "\"width:\":%d"
-      "\"height:\":%d"
-      "\"x:\":%d"
-      "\"y:\":%d"
+      ",\"width:\":%d"
+      ",\"height:\":%d"
+      ",\"x:\":%d"
+      ",\"y:\":%d"
       "}"
       "%s",
       ev->window.id,
