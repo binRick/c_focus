@@ -20,8 +20,14 @@ struct c_focus_event_t {
     unsigned long timestamp;
   } time;
   struct {
+    int x, y;
+  } mouse;
+  struct {
     pid_t pid;
-    char  *name, *path, *title, *executable;
+    char *executable;
+  } process;
+  struct {
+    char  *name, *path, *title;
   } app;
   struct {
     uint32_t id;

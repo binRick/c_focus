@@ -55,9 +55,6 @@ static int __c_focus_event_handler(void);
   AXUIElementRef app;
   app = AXUIElementCreateApplication(currentApp.processIdentifier);
 
-
-
-
   if(!app){
       fprintf(stderr,"Failed to get Focused app\n");
   }else{
@@ -81,9 +78,17 @@ static int __c_focus_event_handler(void);
     CFRelease(uuid);  
   }
 
+  CGEventRef Event = CGEventCreate(nil);
+  CGPoint    mouse_loc     = CGEventGetLocation(Event);
+  CFRelease(Event);
+
   struct c_focus_event_t e = {
     .time         = {
       .timestamp  = __c_focus__timestamp(),
+    },
+    .mouse={
+      .x=(int)(mouse_loc.x),
+      .y=(int)(mouse_loc.y),
     },
     .space = {
       .id=space_id,
@@ -94,10 +99,12 @@ static int __c_focus_event_handler(void);
     .window = {
       .id=window_id,
     },
-    .app          = {
-      .pid        = currentApp.processIdentifier,
-      .name       = (char *)[currentApp.localizedName UTF8String],
+    .process={
+      .pid        = (pid_t)currentApp.processIdentifier,
       .executable = (char *)[currentApp.executableURL.absoluteString UTF8String],
+    },
+    .app          = {
+      .name       = (char *)[currentApp.localizedName UTF8String],
       .path       = (char *)[currentApp.bundleURL.absoluteString UTF8String],
       .title      = (char *)[currentApp.bundleIdentifier UTF8String],
     },
