@@ -205,6 +205,7 @@ char *__c_focus_serialize_event(struct c_focus_event_t *ev){
       ",\"space:\":%s"
       ",\"mouse:\":%s"
       ",\"app:\":%s"
+      ",\"executable:\":%s"
       "}"
       "%s",
       w,
@@ -212,6 +213,7 @@ char *__c_focus_serialize_event(struct c_focus_event_t *ev){
       s,
       m,
       a,
+      e,
       ""
       );
   return(s);
