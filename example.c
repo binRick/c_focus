@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include "submodules/c_fsio/include/fsio.h"
-#include "submodules/c_stringfn/include/stringfn.h"
+#include "fsio.h"
+#include "stringfn.h"
 
 void __focus_changed_callback(struct c_focus_event_t e){
   char *json=__c_focus_serialize_event(&e);

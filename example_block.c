@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include "fsio.h"
+#include "stringfn.h"
 
 int main(int argc, const char *argv[]) {
   return(__c_focus_block(^ void (struct c_focus_event_t e){
