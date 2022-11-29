@@ -23,6 +23,7 @@ c_focus_link_args=[
 ]
 
 c_focus_util_sources = [
+  'dist/src/stringbuffer.c',
   'dist/src/fsio.c',
   'dist/src/stringfn.c',
 ]
@@ -58,14 +59,22 @@ c_focus_dep = declare_dependency(
 )
 
 c_focus_example_block_exec = executable('example_block',
-  ['example_block.c'],
+  ['examples/example_block.c'],
   dependencies:[c_focus_dep],
   install: false,
   link_args: [],
 
   )
-c_focus_example_exec = executable('example',
-  ['example.c'],
+c_focus_example_exec = executable('focus_logger',
+  ['examples/focus_logger.c'],
+  dependencies:[c_focus_dep],
+  link_whole: [c_focus_util_lib],
+  install: true,
+  link_args: [],
+
+  )
+c_focus_example_exec = executable('example_callback',
+  ['examples/example_callback.c'],
   dependencies:[c_focus_dep],
   install: false,
   link_args: [],

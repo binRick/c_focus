@@ -1,8 +1,8 @@
 #include "c_focus.h"
-#import <AppKit/AppKit.h>
-#import <Foundation/Foundation.h>
 #include "fsio.h"
 #include "stringfn.h"
+#import <AppKit/AppKit.h>
+#import <Foundation/Foundation.h>
 extern AXError _AXUIElementGetWindow(AXUIElementRef, uint32_t *);
 extern CFStringRef SLSCopyManagedDisplayForWindow(int cid, uint32_t wid);
 extern int CGSMainConnectionID(void);
@@ -16,49 +16,46 @@ extern uint64_t SLSManagedDisplayGetCurrentSpace(int, CFStringRef);
 @implementation MDAppController
 @synthesize currentApp;
 
-static const char *path_prefix="file://";
+static const char             *path_prefix = "file://";
 static struct c_focus_state_t state;
 static unsigned long __c_focus__timestamp(void);
 static int __c_focus_event_handler(void);
 static void __c_focus_normalize_event(struct c_focus_event_t *);
-static void AXWindowGetValue(AXUIElementRef window,
-                      CFStringRef    attrName,
-                      void           *valuePtr);
-static void __c_focus_normalize_event(struct c_focus_event_t *ev){
+static void AXWindowGetValue(AXUIElementRef window, CFStringRef attrName, void *valuePtr);
 
-  if(ev->process.executable)
-    if(stringfn_starts_with(ev->process.executable,path_prefix))
-      ev->process.executable=stringfn_substring(ev->process.executable,strlen(path_prefix),strlen(ev->app.path)-strlen(ev->app.path));
-  if(ev->app.path)
-    if(stringfn_starts_with(ev->app.path,path_prefix))
-      ev->app.path=stringfn_substring(ev->app.path,strlen(path_prefix),strlen(ev->app.path)-strlen(ev->app.path));
-  if(stringfn_ends_with(ev->app.path,"/"))
-    ev->app.path=stringfn_substring(ev->app.path,0,strlen(ev->app.path)-1);
-  CFArrayRef window_list;
-  CFNumberRef window_memory_usage_ref;
-  uint32_t window_qty=0;
-  CFDictionaryRef     window_dict;
-  size_t window_memory_usage=0;
-  CFDictionaryRef     window_bounds;
-  CGRect bounds;
-  if(ev->window.id)
-    window_list = CGWindowListCopyWindowInfo(kCGWindowListOptionAll | kCGWindowListOptionIncludingWindow, ev->window.id); 
-  if(window_list)
+static void __c_focus_normalize_event(struct c_focus_event_t *ev){
+  if (ev->process.executable)
+    if (stringfn_starts_with(ev->process.executable, path_prefix))
+      ev->process.executable = stringfn_substring(ev->process.executable, strlen(path_prefix), strlen(ev->app.path) - strlen(ev->app.path));
+  if (ev->app.path)
+    if (stringfn_starts_with(ev->app.path, path_prefix))
+      ev->app.path = stringfn_substring(ev->app.path, strlen(path_prefix), strlen(ev->app.path) - strlen(ev->app.path));
+  if (stringfn_ends_with(ev->app.path, "/"))
+    ev->app.path = stringfn_substring(ev->app.path, 0, strlen(ev->app.path) - 1);
+  CFArrayRef      window_list;
+  CFNumberRef     window_memory_usage_ref;
+  uint32_t        window_qty = 0;
+  CFDictionaryRef window_dict;
+  size_t          window_memory_usage = 0;
+  CFDictionaryRef window_bounds;
+  CGRect          bounds;
+  if (ev->window.id)
+    window_list = CGWindowListCopyWindowInfo(kCGWindowListOptionAll | kCGWindowListOptionIncludingWindow, ev->window.id);
+  if (window_list)
     window_qty = CFArrayGetCount(window_list);
-  if(window_qty==1)
+  if (window_qty == 1)
     window_dict = CFArrayGetValueAtIndex(window_list, 0);
-  if(window_dict){
-    window_memory_usage_ref = CFDictionaryGetValue(window_dict, kCGWindowMemoryUsage); 
-    if((window_bounds = CFDictionaryGetValue(window_dict, kCGWindowBounds)))
+  if (window_dict) {
+    window_memory_usage_ref = CFDictionaryGetValue(window_dict, kCGWindowMemoryUsage);
+    if ((window_bounds = CFDictionaryGetValue(window_dict, kCGWindowBounds)))
       CGRectMakeWithDictionaryRepresentation(window_bounds, &bounds);
   }
-  if(window_memory_usage_ref)
+  if (window_memory_usage_ref)
     CFNumberGetValue(window_memory_usage_ref, CFNumberGetType(window_memory_usage_ref), &window_memory_usage);
-  if(bounds.size.width)
-    ev->window.width=(int)(bounds.size.width);
-  if(bounds.size.height)
-    ev->window.height=(int)(bounds.size.height);
-  
+  if (bounds.size.width)
+    ev->window.width = (int)(bounds.size.width);
+  if (bounds.size.height)
+    ev->window.height = (int)(bounds.size.height);
 }
 - (id)init {
   if ((self = [super init]))
@@ -77,13 +74,14 @@ static void __c_focus_normalize_event(struct c_focus_event_t *ev){
   [NSApp terminate:self];
 }
 
-- (void) setMenuItemIcon:(NSArray*)imageAndMenuId {
-  NSImage* image = [imageAndMenuId objectAtIndex:0];
-  NSNumber* menuId = [imageAndMenuId objectAtIndex:1];
-  NSMenuItem* menuItem;
-  if (menuItem == NULL) {
+- (void) setMenuItemIcon:(NSArray *)imageAndMenuId {
+  NSImage    *image  = [imageAndMenuId objectAtIndex:0];
+  NSNumber   *menuId = [imageAndMenuId objectAtIndex:1];
+  NSMenuItem *menuItem;
+
+  if (menuItem == NULL)
     return;
-  }
+
   menuItem.image = image;
 }
 
@@ -91,72 +89,67 @@ static void __c_focus_normalize_event(struct c_focus_event_t *ev){
   if (!state.active)
     return;
 
-  CGPoint window_position;
+  CGPoint        window_position;
   self.currentApp = [[notification userInfo] objectForKey:NSWorkspaceApplicationKey];
-  CFTypeRef window_ref = NULL;
-  uint32_t window_id = 0, display_id =0, space_id=0;
+  CFTypeRef      window_ref = NULL;
+  uint32_t       window_id = 0, display_id = 0, space_id = 0;
   AXUIElementRef app;
   app = AXUIElementCreateApplication(currentApp.processIdentifier);
 
-  if(!app){
-      fprintf(stderr,"Failed to get Focused app\n");
-  }else{
+  if (!app)
+    fprintf(stderr, "Failed to get Focused app\n");
+  else{
     AXUIElementCopyAttributeValue(app, kAXFocusedWindowAttribute, &window_ref);
-    if(!window_ref){
-      fprintf(stderr,"Failed to Copy Focused app for pid %d\n",currentApp.processIdentifier);
-    }else{
+    if (!window_ref)
+      fprintf(stderr, "Failed to Copy Focused app for pid %d\n", currentApp.processIdentifier);
+    else{
       _AXUIElementGetWindow(window_ref, &window_id);
       AXWindowGetValue(window_ref, kAXPositionAttribute, &window_position);
       CFRelease(window_ref);
     }
     CFRelease(app);
   }
-  if(window_id>0){
+  if (window_id > 0) {
     CFStringRef _uuid = SLSCopyManagedDisplayForWindow(CGSMainConnectionID(), window_id);
     CFUUIDRef   uuid  = CFUUIDCreateFromString(NULL, _uuid);
     display_id = CGDisplayGetDisplayIDFromUUID(uuid);
-    if(display_id>0){
+    if (display_id > 0)
       space_id = SLSManagedDisplayGetCurrentSpace(CGSMainConnectionID(), _uuid);
-    }
     CFRelease(_uuid);
-    CFRelease(uuid);  
+    CFRelease(uuid);
   }
 
-
-  CGEventRef Event = CGEventCreate(nil);
-  CGPoint    mouse_loc     = CGEventGetLocation(Event);
+  CGEventRef Event     = CGEventCreate(nil);
+  CGPoint    mouse_loc = CGEventGetLocation(Event);
   CFRelease(Event);
-
-
-
 
   struct c_focus_event_t e = {
     .time         = {
       .timestamp  = __c_focus__timestamp(),
     },
-    .mouse={
-      .x=(int)(mouse_loc.x),
-      .y=(int)(mouse_loc.y),
+    .mouse        = {
+      .x = (int)(mouse_loc.x),
+      .y = (int)(mouse_loc.y),
     },
-    .space = {
-      .id=space_id,
+    .space        = {
+      .id         = space_id,
     },
-    .display = {
-      .id=display_id,
+    .display      = {
+      .id         = display_id,
     },
-    .window = {
-      .id=window_id,
-      .x=(int)(window_position.x),
-      .y=(int)(window_position.y),
+    .window       = {
+      .id = window_id,
+      .x  = (int)(window_position.x),
+      .y  = (int)(window_position.y),
     },
-    .process={
+    .process      = {
       .pid        = (pid_t)currentApp.processIdentifier,
       .executable = (char *)[currentApp.executableURL.absoluteString UTF8String],
     },
     .app          = {
-      .name       = (char *)[currentApp.localizedName UTF8String],
-      .path       = (char *)[currentApp.bundleURL.absoluteString UTF8String],
-      .title      = (char *)[currentApp.bundleIdentifier UTF8String],
+      .name  = (char *)[currentApp.localizedName UTF8String],
+      .path  = (char *)[currentApp.bundleURL.absoluteString UTF8String],
+      .title = (char *)[currentApp.bundleIdentifier UTF8String],
     },
   };
   __c_focus_normalize_event(&e);
@@ -165,10 +158,11 @@ static void __c_focus_normalize_event(struct c_focus_event_t *ev){
     state.callback(e);
   else if (state.block)
     state.block(e);
-}
+} /* activeAppDidChange */
+
 static void AXWindowGetValue(AXUIElementRef window,
-                      CFStringRef    attrName,
-                      void           *valuePtr) {
+                             CFStringRef    attrName,
+                             void           *valuePtr) {
   AXValueRef attrValue;
 
   AXUIElementCopyAttributeValue(window, attrName, (CFTypeRef *)&attrValue);
@@ -178,99 +172,102 @@ static void AXWindowGetValue(AXUIElementRef window,
 @end
 
 char *__c_focus_serialize_event(struct c_focus_event_t *ev){
-  char *s,*w,*a,*d,*t,*m,*e;
+  char *s, *w, *a, *d, *t, *m, *e;
+
   asprintf(&e,
-      "{"
-      "\"executable:\":\"%s\""
-      ",\"pid:\":%d"
-      "}"
-      "%s",
-      ev->process.executable,
-      ev->process.pid,
-      ""
-      );
+           "{"
+           "\"executable:\":\"%s\""
+           ",\"pid:\":%d"
+           "}"
+           "%s",
+           ev->process.executable,
+           ev->process.pid,
+           ""
+           );
   asprintf(&m,
-      "{"
-      "\"x:\":%d"
-      ",\"y:\":%d"
-      "}"
-      "%s",
-      ev->mouse.x,
-      ev->mouse.y,
-      ""
-      );
+           "{"
+           "\"x:\":%d"
+           ",\"y:\":%d"
+           "}"
+           "%s",
+           ev->mouse.x,
+           ev->mouse.y,
+           ""
+           );
   asprintf(&t,
-      "{"
-      "\"timestamp:\":\"%ld\""
-      "}"
-      "%s",
-      ev->time.timestamp,
-      ""
-      );
+           "{"
+           "\"timestamp:\":%ld"
+           "}"
+           "%s",
+           ev->time.timestamp,
+           ""
+           );
   asprintf(&a,
-      "{"
-      "\"name:\":\"%s\""
-      ",\"path:\":\"%s\""
-      ",\"title:\":\"%s\""
-      "}"
-      "%s",
-      ev->app.name,
-      ev->app.path,
-      ev->app.title,
-      ""
-      );
+           "{"
+           "\"name:\":\"%s\""
+           ",\"path:\":\"%s\""
+           ",\"title:\":\"%s\""
+           "}"
+           "%s",
+           ev->app.name,
+           ev->app.path,
+           ev->app.title,
+           ""
+           );
   asprintf(&s,
-      "{"
-      "\"id:\":%d"
-      "}"
-      "%s",
-      ev->space.id,
-      ""
-      );
+           "{"
+           "\"id:\":%d"
+           "}"
+           "%s",
+           ev->space.id,
+           ""
+           );
   asprintf(&d,
-      "{"
-      "\"id:\":%d"
-      "}"
-      "%s",
-      ev->display.id,
-      ""
-      );
+           "{"
+           "\"id:\":%d"
+           "}"
+           "%s",
+           ev->display.id,
+           ""
+           );
   asprintf(&w,
-      "{"
-      "\"id:\":%d"
-      ",\"width:\":%d"
-      ",\"height:\":%d"
-      ",\"x:\":%d"
-      ",\"y:\":%d"
-      "}"
-      "%s",
-      ev->window.id,
-      ev->window.width,
-      ev->window.height,
-      ev->window.x,
-      ev->window.y,
-      ""
-      );
+           "{"
+           "\"id:\":%d"
+           ",\"width:\":%d"
+           ",\"height:\":%d"
+           ",\"x:\":%d"
+           ",\"y:\":%d"
+           "}"
+           "%s",
+           ev->window.id,
+           ev->window.width,
+           ev->window.height,
+           ev->window.x,
+           ev->window.y,
+           ""
+           );
   asprintf(&s,
-      "{"
-      "\"window:\":%s"
-      ",\"display:\":%s"
-      ",\"space:\":%s"
-      ",\"mouse:\":%s"
-      ",\"app:\":%s"
-      ",\"executable:\":%s"
-      "}"
-      "%s",
-      w,
-      d,
-      s,
-      m,
-      a,
-      e,
-      ""
-      );
+           "{"
+           "\"time:\":%s"
+           ",\"window:\":%s"
+           ",\"display:\":%s"
+           ",\"space:\":%s"
+           ",\"mouse:\":%s"
+           ",\"app:\":%s"
+           ",\"executable:\":%s"
+           "}"
+           "%s",
+           t,
+           w,
+           d,
+           s,
+           m,
+           a,
+           e,
+           ""
+           );
   return(s);
-}
+} /* __c_focus_serialize_event */
 
 static int __c_focus_event_handler(void){
   state.active = true;

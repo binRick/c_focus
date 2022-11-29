@@ -1,20 +1,21 @@
+#include "fsio.h"
 #include "src/c_focus.h"
+#include "stringfn.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include "fsio.h"
-#include "stringfn.h"
 
 void __focus_changed_callback(struct c_focus_event_t e){
-  char *json=__c_focus_serialize_event(&e);
-  printf("%s\n",json);
+  char *json = __c_focus_serialize_event(&e);
+
+  printf("%s\n", json);
   printf("Focus Changed "
-      "|Mouse:%dx%d"
-      "|Position:%dx%d"
-      "|Space ID:%d|Display ID:%d|Window ID:%d|PID:%d|Name:%s|Title:%s|Time:%ld|Path:%s|Executable:%s|\n",
-      e.mouse.x,e.mouse.y,
-      e.window.x,e.window.y,
+         "|Mouse:%dx%d"
+         "|Position:%dx%d"
+         "|Space ID:%d|Display ID:%d|Window ID:%d|PID:%d|Name:%s|Title:%s|Time:%ld|Path:%s|Executable:%s|\n",
+         e.mouse.x, e.mouse.y,
+         e.window.x, e.window.y,
          e.space.id,
          e.display.id,
          e.window.id,

@@ -24,14 +24,14 @@ struct c_focus_event_t {
   } mouse;
   struct {
     pid_t pid;
-    char *executable;
+    char  *executable;
   } process;
   struct {
-    char  *name, *path, *title;
+    char *name, *path, *title;
   } app;
   struct {
     uint32_t id;
-    char *uuid;
+    char     *uuid;
   } display;
   struct {
     uint32_t id;
