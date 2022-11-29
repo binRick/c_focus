@@ -1,8 +1,8 @@
 #include "c_focus.h"
 #import <AppKit/AppKit.h>
 #import <Foundation/Foundation.h>
-#include "submodules/c_fsio/include/fsio.h"
-#include "submodules/c_stringfn/include/stringfn.h"
+#include "fsio.h"
+#include "stringfn.h"
 extern AXError _AXUIElementGetWindow(AXUIElementRef, uint32_t *);
 extern CFStringRef SLSCopyManagedDisplayForWindow(int cid, uint32_t wid);
 extern int CGSMainConnectionID(void);

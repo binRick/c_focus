@@ -8,6 +8,7 @@ inc = [
   include_directories(
     'src',
     '.',
+    'dist','dist/src','dist/include',
     'submodules',
   ),
 ]
@@ -22,8 +23,8 @@ c_focus_link_args=[
 ]
 
 c_focus_util_sources = [
-  'submodules/c_fsio/src/fsio.c',
-  'submodules/c_stringfn/src/stringfn.c',
+  'dist/src/fsio.c',
+  'dist/src/stringfn.c',
 ]
 
 c_focus_sources = [
