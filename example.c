@@ -16,5 +16,5 @@ void __focus_changed_callback(struct c_focus_event_t e){
 }
 
 int main(int argc, const char * argv[]) {
-  return(fw_main(__focus_changed_callback));
+  return(__c_focus_watch(__focus_changed_callback));
 }
