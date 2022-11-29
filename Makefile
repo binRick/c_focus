@@ -16,3 +16,7 @@ clean:
 
 
 all: meson 
+
+tidy:
+	@uncrustify -c ~/repos/c_deps/etc/uncrustify.cfg --replace example_block.c example.c src/c_focus.h src/c_focus.m
+	@rm *unc-backup* */*unc-backup*

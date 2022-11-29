@@ -13,6 +13,7 @@
 
 static c_focus_event_callback_t focus_callback = NULL;
 static c_focus_event_block_t    focus_block    = NULL;
+static struct c_focus_state_t state = { 0 };
 static int __c_focus(void);
 static unsigned long __c_focus__timestamp(void);
 
@@ -50,6 +51,7 @@ static unsigned long __c_focus__timestamp(void);
 @end
 
 static int __c_focus(void){
+  state.active=true;
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
   [NSApplication sharedApplication];

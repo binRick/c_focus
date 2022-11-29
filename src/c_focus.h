@@ -6,9 +6,13 @@
 #include <string.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <stdbool.h>
 struct c_focus_event_t;
 typedef void (*c_focus_event_callback_t)(struct c_focus_event_t);
 typedef void (^c_focus_event_block_t)(struct c_focus_event_t);
+struct c_focus_state_t {
+  bool active;
+};
 struct c_focus_event_t {
   struct {
     unsigned long timestamp;
