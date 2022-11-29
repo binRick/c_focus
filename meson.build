@@ -10,7 +10,13 @@ inc = [
     '.',
   ),
 ]
-c_focus_link_args=['-Wl,-framework,Foundation','-Wl,-framework,AppKit']
+c_focus_link_args=[
+  '-Wl,-framework,CoreFoundation',
+  '-Wl,-framework,Foundation',
+  '-Wl,-framework,AppKit',
+  '-Wl,-framework,SkyLight',
+  '-F/System/Library/PrivateFrameworks',
+]
 
 #############################################################################
 c_focus_lib = static_library('c_focus',

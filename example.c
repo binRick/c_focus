@@ -5,7 +5,10 @@
 #include <unistd.h>
 
 void __focus_changed_callback(struct c_focus_event_t e){
-  printf("Focus Changed |PID:%d|Name:%s|Title:%s|Time:%ld|Path:%s|Executable:%s|\n",
+  printf("Focus Changed |Space ID:%d|Display ID:%d|Window ID:%d|PID:%d|Name:%s|Title:%s|Time:%ld|Path:%s|Executable:%s|\n",
+         e.space.id,
+         e.display.id,
+         e.window.id,
          e.app.pid,
          e.app.name,
          e.app.title,

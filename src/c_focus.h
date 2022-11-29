@@ -23,6 +23,16 @@ struct c_focus_event_t {
     pid_t pid;
     char  *name, *path, *title, *executable;
   } app;
+  struct {
+    uint32_t id;
+    char *uuid;
+  } display;
+  struct {
+    uint32_t id;
+  } space;
+  struct {
+    uint32_t id;
+  } window;
 };
 int __c_focus_callback(c_focus_event_callback_t callback);
 int __c_focus_block(c_focus_event_block_t block);
