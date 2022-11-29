@@ -11,8 +11,8 @@
 @implementation MDAppController
 @synthesize currentApp;
 
-static c_focus_event_callback_t callback = NULL;
-static c_focus_event_callback_b callback_b = NULL;
+static c_focus_event_callback_t focus_callback = NULL;
+static c_focus_event_block_t focus_block = NULL;
 static int __c_focus(void);
 static unsigned long __c_focus__timestamp(void);
 
@@ -32,19 +32,21 @@ static unsigned long __c_focus__timestamp(void);
 - (void)activeAppDidChange:(NSNotification *)notification {
     self.currentApp = [[notification userInfo] objectForKey:NSWorkspaceApplicationKey];
       struct c_focus_event_t e = {
+        .time = {
+          .timestamp=__c_focus__timestamp(),
+        },
         .app = {
           .pid=currentApp.processIdentifier,
           .name=(char*)[currentApp.localizedName UTF8String],
           .executable=(char*)[currentApp.executableURL.absoluteString UTF8String],
           .path=(char*)[currentApp.bundleURL.absoluteString UTF8String],
           .title=(char*)[currentApp.bundleIdentifier UTF8String],
-          .timestamp=__c_focus__timestamp(),
         },
      };
-    if(callback)
-      callback(e);
-    else if(callback_b)
-      callback_b(e);
+    if(focus_callback)
+      focus_callback(e);
+    else if(focus_block)
+      focus_block(e);
 }
 @end
 
@@ -57,13 +59,13 @@ static int __c_focus(void){
   [pool release];
   return 0;
 }
-int __c_focus_watch_b(c_focus_event_callback_b cb){
-  callback_b=cb;
+int __c_focus_block(c_focus_event_block_t cb){
+  focus_block=cb;
   return __c_focus();
 }
 
-int __c_focus_watch(c_focus_event_callback_t cb){
-  callback=cb;
+int __c_focus_callback(c_focus_event_callback_t cb){
+  focus_callback=cb;
   return __c_focus();
 }
 
